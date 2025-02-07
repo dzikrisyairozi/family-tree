@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useFamily } from '@/context/FamilyContext';
+import { useFamily } from '@/context/family-context';
 import type { Person, PersonFormData } from '@/types/family';
 
 const emptyFormData: PersonFormData = {

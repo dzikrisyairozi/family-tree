@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useFamily } from '@/context/FamilyContext';
+import { useFamily } from '@/context/family-context';
 import type { FamilyMember, Person } from '@/types/family';
 
 interface TreeNodeDatum {
