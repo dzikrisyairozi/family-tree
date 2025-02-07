@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 
 import { PersonDetail } from '@/components/admin/person-detail';
@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useFamily } from '@/context/family-context';
+import { useAddPerson } from '@/hooks/use-add-person';
 import type { Person, PersonFormData } from '@/types/family';
 
 const emptyFormData: PersonFormData = {
@@ -50,32 +51,16 @@ export default function AdminPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [formData, setFormData] = useState<PersonFormData>(emptyFormData);
 
+  const { addPerson, isSubmitting } = useAddPerson({
+    onSuccess: () => {
+      setIsAddOpen(false);
+      setFormData(emptyFormData);
+    },
+    setPeople,
+  });
+
   const handleAdd = () => {
-    const newPerson: Person = {
-      id: Math.max(...people.map((p) => p.id), 0) + 1,
-      shortName: formData.shortName,
-      fullName: formData.fullName,
-      age: parseInt(formData.age) || 0,
-      gender: formData.gender as 'Male' | 'Female',
-      status: formData.status as 'alive' | 'deceased',
-      phone: formData.phone,
-      address: formData.address,
-      parents: formData.parents.map((p) => ({
-        id: parseInt(p.id),
-        type: p.type,
-      })),
-      spouses: formData.spouses.map((s) => ({
-        id: parseInt(s.id),
-        status: s.status,
-      })),
-      children: formData.children.map((c) => ({
-        id: parseInt(c.id),
-        type: c.type,
-      })),
-    };
-    setPeople([...people, newPerson]);
-    setIsAddOpen(false);
-    resetForm();
+    addPerson(formData);
   };
 
   const handleEdit = () => {
@@ -271,12 +256,26 @@ export default function AdminPage() {
               people={people}
               onChange={setFormData}
               idPrefix="add-"
+              isSubmitting={isSubmitting}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddOpen(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAdd}>Add Person</Button>
+              <Button onClick={handleAdd} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  'Add Person'
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

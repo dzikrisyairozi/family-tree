@@ -20,6 +20,7 @@ interface PersonFormProps {
   people: Person[];
   onChange: (data: PersonFormData) => void;
   idPrefix: string;
+  isSubmitting?: boolean;
 }
 
 export function PersonForm({
@@ -27,6 +28,7 @@ export function PersonForm({
   people,
   onChange,
   idPrefix,
+  isSubmitting = false,
 }: PersonFormProps) {
   return (
     <div className="grid max-h-[60vh] gap-4 overflow-y-auto py-4 pr-4">
@@ -39,7 +41,8 @@ export function PersonForm({
           value={formData.shortName}
           onChange={(e) => onChange({ ...formData, shortName: e.target.value })}
           className="col-span-3"
-          placeholder="e.g., Bob"
+          placeholder="e.g., Dzikri"
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
@@ -51,7 +54,8 @@ export function PersonForm({
           value={formData.fullName}
           onChange={(e) => onChange({ ...formData, fullName: e.target.value })}
           className="col-span-3"
-          placeholder="e.g., Robert James Smith"
+          placeholder="e.g., Dzikri Syairozi"
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
@@ -64,6 +68,7 @@ export function PersonForm({
           value={formData.age}
           onChange={(e) => onChange({ ...formData, age: e.target.value })}
           className="col-span-3"
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
@@ -73,6 +78,7 @@ export function PersonForm({
         <Select
           value={formData.gender}
           onValueChange={(value) => onChange({ ...formData, gender: value })}
+          disabled={isSubmitting}
         >
           <SelectTrigger className="col-span-3">
             <SelectValue placeholder="Select gender" />
@@ -90,6 +96,7 @@ export function PersonForm({
         <Select
           value={formData.status}
           onValueChange={(value) => onChange({ ...formData, status: value })}
+          disabled={isSubmitting}
         >
           <SelectTrigger className="col-span-3">
             <SelectValue placeholder="Select status" />
@@ -109,6 +116,7 @@ export function PersonForm({
           value={formData.phone}
           onChange={(e) => onChange({ ...formData, phone: e.target.value })}
           className="col-span-3"
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
@@ -120,6 +128,7 @@ export function PersonForm({
           value={formData.address}
           onChange={(e) => onChange({ ...formData, address: e.target.value })}
           className="col-span-3"
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
@@ -134,6 +143,7 @@ export function PersonForm({
                   newParents[index].id = value;
                   onChange({ ...formData, parents: newParents });
                 }}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select parent" />
@@ -154,6 +164,7 @@ export function PersonForm({
                   onChange({ ...formData, parents: newParents });
                 }}
                 className="flex"
+                disabled={isSubmitting}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem
@@ -168,6 +179,7 @@ export function PersonForm({
                 </div>
               </RadioGroup>
               <Button
+                disabled={isSubmitting}
                 variant="ghost"
                 size="icon"
                 onClick={() => {
@@ -182,6 +194,7 @@ export function PersonForm({
             </div>
           ))}
           <Button
+            disabled={isSubmitting}
             variant="outline"
             onClick={() => {
               onChange({
@@ -206,6 +219,7 @@ export function PersonForm({
                   newSpouses[index].id = value;
                   onChange({ ...formData, spouses: newSpouses });
                 }}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select spouse" />
@@ -225,6 +239,7 @@ export function PersonForm({
                   newSpouses[index].status = value;
                   onChange({ ...formData, spouses: newSpouses });
                 }}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -236,6 +251,7 @@ export function PersonForm({
                 </SelectContent>
               </Select>
               <Button
+                disabled={isSubmitting}
                 variant="ghost"
                 size="icon"
                 onClick={() => {
@@ -250,6 +266,7 @@ export function PersonForm({
             </div>
           ))}
           <Button
+            disabled={isSubmitting}
             variant="outline"
             onClick={() => {
               onChange({
@@ -274,6 +291,7 @@ export function PersonForm({
                   newChildren[index].id = value;
                   onChange({ ...formData, children: newChildren });
                 }}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select child" />
@@ -294,11 +312,13 @@ export function PersonForm({
                   onChange({ ...formData, children: newChildren });
                 }}
                 className="flex"
+                disabled={isSubmitting}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem
                     value="biological"
                     id={`child-biological-${index}`}
+                    disabled={isSubmitting}
                   />
                   <Label htmlFor={`child-biological-${index}`}>
                     Biological
@@ -308,11 +328,13 @@ export function PersonForm({
                   <RadioGroupItem
                     value="adoptive"
                     id={`child-adoptive-${index}`}
+                    disabled={isSubmitting}
                   />
                   <Label htmlFor={`child-adoptive-${index}`}>Adoptive</Label>
                 </div>
               </RadioGroup>
               <Button
+                disabled={isSubmitting}
                 variant="ghost"
                 size="icon"
                 onClick={() => {
@@ -327,6 +349,7 @@ export function PersonForm({
             </div>
           ))}
           <Button
+            disabled={isSubmitting}
             variant="outline"
             onClick={() => {
               onChange({

@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { supabase } from '@/lib/supabase';
 import type { FamilyMember, Person } from '@/types/family';
 import { buildFamilyTree } from '@/utils/family-tree';
+import { transformFamilyData } from '@/utils/transform-data';
 
 interface FamilyContextType {
   people: Person[];
@@ -29,59 +29,16 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch initial data
   useEffect(() => {
     async function fetchFamilyData() {
       try {
         setLoading(true);
-
-        // Fetch persons
-        const { data: persons, error: personsError } = await supabase
-          .from('persons')
-          .select('*');
-
-        if (personsError) throw personsError;
-
-        // Fetch relationships
-        const { data: parentChildRels, error: parentChildError } =
-          await supabase.from('parent_child_relationships').select('*');
-
-        const { data: spouseRels, error: spouseError } = await supabase
-          .from('spouse_relationships')
-          .select('*');
-
-        if (parentChildError) throw parentChildError;
-        if (spouseError) throw spouseError;
-
-        // Transform data to match Person interface
-        const transformedPeople = persons.map((person) => ({
-          ...person,
-          parents: parentChildRels
-            .filter((rel) => rel.child_id === person.id)
-            .map((rel) => ({
-              id: rel.parent_id,
-              type: rel.relationship_type,
-            })),
-          children: parentChildRels
-            .filter((rel) => rel.parent_id === person.id)
-            .map((rel) => ({
-              id: rel.child_id,
-              type: rel.relationship_type,
-            })),
-          spouses: spouseRels
-            .filter(
-              (rel) =>
-                rel.person1_id === person.id || rel.person2_id === person.id
-            )
-            .map((rel) => ({
-              id:
-                rel.person1_id === person.id ? rel.person2_id : rel.person1_id,
-              status: rel.status,
-            })),
-        }));
-
+        const transformedPeople = await transformFamilyData();
         setPeople(transformedPeople);
         setError(null);
       } catch (err) {
+        console.error('Error fetching family data:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
@@ -93,19 +50,36 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
   // Build family tree when people data changes
   useEffect(() => {
-    const root = people.find((p) => p.parents.length === 0);
-    if (root) {
-      setFamilyTree(buildFamilyTree(people, root.id));
+    if (people && people.length > 0) {
+      const root = people.find((p) => p.parents && p.parents.length === 0);
+      if (root) {
+        const tree = buildFamilyTree(people, root.id);
+        setFamilyTree(tree);
+      } else {
+        setFamilyTree(null);
+      }
+    } else {
+      setFamilyTree(null);
     }
   }, [people]);
 
+  const value = {
+    people,
+    setPeople,
+    familyTree,
+    loading,
+    error,
+  };
+
   return (
-    <FamilyContext.Provider
-      value={{ people, setPeople, familyTree, loading, error }}
-    >
-      {children}
-    </FamilyContext.Provider>
+    <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>
   );
 }
 
-export const useFamily = () => useContext(FamilyContext);
+export const useFamily = () => {
+  const context = useContext(FamilyContext);
+  if (!context) {
+    throw new Error('useFamily must be used within a FamilyProvider');
+  }
+  return context;
+};
