@@ -1,30 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 
-import { PersonDetail } from '@/components/admin/person-detail';
-import { PersonForm } from '@/components/admin/person-form';
+import { PersonAddDialog } from '@/components/admin/dialogs/person-add-dialog';
+import { PersonDeleteDialog } from '@/components/admin/dialogs/person-delete-dialog';
+import { PersonDetailDialog } from '@/components/admin/dialogs/person-detail-dialog';
+import { PersonEditDialog } from '@/components/admin/dialogs/person-edit-dialog';
 import { PersonTable } from '@/components/admin/person-table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useFamily } from '@/context/family-context';
 import { useAddPerson } from '@/hooks/use-add-person';
 import { useDeletePerson } from '@/hooks/use-delete-person';
@@ -209,119 +194,41 @@ export default function AdminPage() {
           />
         </motion.div>
 
-        <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Person Details</DialogTitle>
-            </DialogHeader>
-            {selectedPerson && (
-              <PersonDetail
-                person={selectedPerson}
-                getPersonName={getPersonName}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+        <PersonDetailDialog
+          isOpen={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+          selectedPerson={selectedPerson}
+          getPersonName={getPersonName}
+        />
 
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Edit Person</DialogTitle>
-            </DialogHeader>
-            <PersonForm
-              formData={formData}
-              people={people.filter((p) => p.id !== selectedPerson?.id)}
-              onChange={setFormData}
-              idPrefix="edit-"
-              isSubmitting={isEditing}
-            />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditOpen(false)}
-                disabled={isEditing}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleEdit} disabled={isEditing}>
-                {isEditing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <PersonEditDialog
+          isOpen={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          formData={formData}
+          selectedPerson={selectedPerson}
+          people={people}
+          isSubmitting={isEditing}
+          onSubmit={handleEdit}
+          onChange={setFormData}
+        />
 
-        <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete{' '}
-                {selectedPerson?.shortName}&apos;s record and all associated
-                relationships.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <PersonDeleteDialog
+          isOpen={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          selectedPerson={selectedPerson}
+          isDeleting={isDeleting}
+          onDelete={handleDelete}
+        />
 
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New Person</DialogTitle>
-            </DialogHeader>
-            <PersonForm
-              formData={formData}
-              people={people}
-              onChange={setFormData}
-              idPrefix="add-"
-              isSubmitting={isSubmitting}
-            />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsAddOpen(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleAdd} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  'Add Person'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <PersonAddDialog
+          isOpen={isAddOpen}
+          onOpenChange={setIsAddOpen}
+          formData={formData}
+          people={people}
+          isSubmitting={isSubmitting}
+          onSubmit={handleAdd}
+          onChange={setFormData}
+        />
       </div>
     </main>
   );
