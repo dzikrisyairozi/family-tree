@@ -3,7 +3,7 @@ export interface Person {
   shortName: string;
   fullName: string;
   age: number;
-  gender: string;
+  gender: 'Male' | 'Female';
   status: 'alive' | 'deceased';
   phone: string;
   address: string;
