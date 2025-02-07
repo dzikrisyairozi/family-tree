@@ -28,6 +28,7 @@ import {
 import { useFamily } from '@/context/family-context';
 import { useAddPerson } from '@/hooks/use-add-person';
 import { useDeletePerson } from '@/hooks/use-delete-person';
+import { useEditPerson } from '@/hooks/use-edit-person';
 import { useToast } from '@/hooks/use-toast';
 import type { Person, PersonFormData } from '@/types/family';
 
@@ -62,6 +63,19 @@ export default function AdminPage() {
     setPeople,
   });
 
+  const { editPerson, isSubmitting: isEditing } = useEditPerson({
+    onSuccess: () => {
+      setIsEditOpen(false);
+      setSelectedPerson(null);
+      setFormData(emptyFormData);
+      toast({
+        title: 'Success',
+        description: 'Person updated successfully',
+      });
+    },
+    setPeople,
+  });
+
   const { deletePerson, isDeleting } = useDeletePerson({
     onSuccess: () => {
       setIsDeleteOpen(false);
@@ -78,38 +92,18 @@ export default function AdminPage() {
     addPerson(formData);
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!selectedPerson) return;
-    const updatedPeople = people.map((p) =>
-      p.id === selectedPerson.id
-        ? {
-            ...p,
-            shortName: formData.shortName,
-            fullName: formData.fullName,
-            age: parseInt(formData.age) || 0,
-            gender: formData.gender as 'Male' | 'Female',
-            status: formData.status as 'alive' | 'deceased',
-            phone: formData.phone,
-            address: formData.address,
-            parents: formData.parents.map((parent) => ({
-              id: parseInt(parent.id),
-              type: parent.type,
-            })),
-            spouses: formData.spouses.map((spouse) => ({
-              id: parseInt(spouse.id),
-              status: spouse.status,
-            })),
-            children: formData.children.map((child) => ({
-              id: parseInt(child.id),
-              type: child.type,
-            })),
-          }
-        : p
-    );
-    setPeople(updatedPeople);
-    setIsEditOpen(false);
-    setSelectedPerson(null);
-    resetForm();
+
+    const { success, error } = await editPerson(selectedPerson.id, formData);
+
+    if (!success) {
+      toast({
+        title: 'Error',
+        description: error || 'Failed to update person',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDelete = async () => {
@@ -239,12 +233,26 @@ export default function AdminPage() {
               people={people.filter((p) => p.id !== selectedPerson?.id)}
               onChange={setFormData}
               idPrefix="edit-"
+              isSubmitting={isEditing}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditOpen(false)}
+                disabled={isEditing}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleEdit}>Save Changes</Button>
+              <Button onClick={handleEdit} disabled={isEditing}>
+                {isEditing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
