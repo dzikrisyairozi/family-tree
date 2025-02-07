@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/dialog';
 import { useFamily } from '@/context/family-context';
 import { useAddPerson } from '@/hooks/use-add-person';
+import { useDeletePerson } from '@/hooks/use-delete-person';
+import { useToast } from '@/hooks/use-toast';
 import type { Person, PersonFormData } from '@/types/family';
 
 const emptyFormData: PersonFormData = {
@@ -50,11 +52,24 @@ export default function AdminPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [formData, setFormData] = useState<PersonFormData>(emptyFormData);
+  const { toast } = useToast();
 
   const { addPerson, isSubmitting } = useAddPerson({
     onSuccess: () => {
       setIsAddOpen(false);
       setFormData(emptyFormData);
+    },
+    setPeople,
+  });
+
+  const { deletePerson, isDeleting } = useDeletePerson({
+    onSuccess: () => {
+      setIsDeleteOpen(false);
+      setSelectedPerson(null);
+      toast({
+        title: 'Success',
+        description: 'Person deleted successfully',
+      });
     },
     setPeople,
   });
@@ -97,11 +112,17 @@ export default function AdminPage() {
     resetForm();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedPerson) return;
-    setPeople(people.filter((p) => p.id !== selectedPerson.id));
-    setIsDeleteOpen(false);
-    setSelectedPerson(null);
+    const { success, error } = await deletePerson(selectedPerson.id);
+
+    if (!success) {
+      toast({
+        title: 'Error',
+        description: error || 'Failed to delete person',
+        variant: 'destructive',
+      });
+    }
   };
 
   const resetForm = () => {
@@ -234,13 +255,27 @@ export default function AdminPage() {
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete{' '}
-                {selectedPerson?.shortName}&apos;s record.
+                {selectedPerson?.shortName}&apos;s record and all associated
+                relationships.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>
-                Delete
+              <AlertDialogCancel disabled={isDeleting}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
