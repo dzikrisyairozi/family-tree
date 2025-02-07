@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 
+import FamilyTree from '@/components/family-tree';
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -26,6 +28,8 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </div>
+
+      <FamilyTree />
     </main>
   );
 }
