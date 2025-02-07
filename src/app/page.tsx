@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 
-import FamilyTree from '@/components/family-tree';
+import FamilyTree from '@/components/family-tree/index';
 
 export default function Home() {
   return (
