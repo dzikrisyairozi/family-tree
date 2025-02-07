@@ -5,6 +5,7 @@ import { User2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import Tree from 'react-d3-tree';
 
+import { PersonDetail } from '@/components/admin/person-detail';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -14,8 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { useFamily } from '@/context/FamilyContext';
 import type { FamilyMember, Person } from '@/types/family';
-
-// import { PersonDetail } from '@/components/admin/PersonDetail';
 
 interface TreeNodeDatum {
   name: string;
@@ -258,12 +257,12 @@ const FamilyTree = () => {
           <DialogHeader>
             <DialogTitle>Person Details</DialogTitle>
           </DialogHeader>
-          {/* {selectedPerson && (
+          {selectedPerson && (
             <PersonDetail
               person={selectedPerson}
               getPersonName={getPersonName}
             />
-          )} */}
+          )}
         </DialogContent>
       </Dialog>
     </>
