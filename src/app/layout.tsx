@@ -9,9 +9,8 @@ import { ThemeProvider } from '@/providers/theme-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Next.js + shadcn/ui Starter Kit',
-  description:
-    'A beautiful, modern starter template with Next.js 15, Tailwind CSS, and shadcn/ui components.',
+  title: 'Family Tree',
+  description: 'A Family tree app',
   manifest: '/favicon/manifest.json',
   /**
    * generate favicon from https://www.favicon-generator.org/ and replace the favicon files in the public folder
