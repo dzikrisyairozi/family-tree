@@ -31,7 +31,7 @@ const emptyFormData: PersonFormData = {
 };
 
 export default function AdminPage() {
-  const { people, setPeople } = useFamily();
+  const { people, setPeople, relationships } = useFamily();
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -199,6 +199,7 @@ export default function AdminPage() {
           onOpenChange={setIsDetailOpen}
           selectedPerson={selectedPerson}
           getPersonName={getPersonName}
+          relationships={relationships}
         />
 
         <PersonEditDialog

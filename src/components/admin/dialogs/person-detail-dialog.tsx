@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { Person } from '@/types/family';
+import type { Person, Relationship } from '@/types/family';
 
 import { PersonDetail } from '../person-detail';
 
@@ -15,6 +15,7 @@ interface PersonDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedPerson: Person | null;
   getPersonName: (id: number) => string;
+  relationships: Relationship[];
 }
 
 export function PersonDetailDialog({
@@ -22,6 +23,7 @@ export function PersonDetailDialog({
   onOpenChange,
   selectedPerson,
   getPersonName,
+  relationships,
 }: PersonDetailDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -30,7 +32,11 @@ export function PersonDetailDialog({
           <DialogTitle>Person Details</DialogTitle>
         </DialogHeader>
         {selectedPerson && (
-          <PersonDetail person={selectedPerson} getPersonName={getPersonName} />
+          <PersonDetail
+            person={selectedPerson}
+            getPersonName={getPersonName}
+            relationships={relationships}
+          />
         )}
       </DialogContent>
     </Dialog>
