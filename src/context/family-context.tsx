@@ -2,84 +2,89 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import type { FamilyMember, Person } from '@/types/family';
-import { buildFamilyTree } from '@/utils/family-tree';
-import { transformFamilyData } from '@/utils/transform-data';
+import type { Person, Relationship } from '@/types/family';
 
 interface FamilyContextType {
   people: Person[];
-  setPeople: (people: Person[]) => void;
-  familyTree: FamilyMember | null;
+  relationships: Relationship[];
   loading: boolean;
-  error: string | null;
+  rootPerson: Person | null;
+  setPeople: (people: Person[]) => void;
+  setRelationships: (relationships: Relationship[]) => void;
+  setRootPerson: (person: Person | null) => void;
 }
 
-const FamilyContext = createContext<FamilyContextType>({
-  people: [],
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setPeople: () => {},
-  familyTree: null,
-  loading: false,
-  error: null,
-});
+const FamilyContext = createContext<FamilyContextType | undefined>(undefined);
 
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [people, setPeople] = useState<Person[]>([]);
-  const [familyTree, setFamilyTree] = useState<FamilyMember | null>(null);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
+  const [rootPerson, setRootPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial data
   useEffect(() => {
-    async function fetchFamilyData() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const transformedPeople = await transformFamilyData();
-        setPeople(transformedPeople);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching family data:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
+        const [peopleRes, relationshipsRes] = await Promise.all([
+          fetch('/api/persons'),
+          fetch('/api/relationships'),
+        ]);
+
+        if (!peopleRes.ok || !relationshipsRes.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const peopleData = await peopleRes.json();
+        const relationshipsData = await relationshipsRes.json();
+
+        setPeople(peopleData);
+        setRelationships(relationshipsData);
+
+        // Find root person (person with no parents)
+        const rootPerson = peopleData.find((person: Person) => {
+          return !relationshipsData.some(
+            (rel: Relationship) =>
+              rel.relationship_type === 'parent-child' &&
+              rel.to_person_id === person.id
+          );
+        });
+
+        if (rootPerson) {
+          setRootPerson(rootPerson);
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching family data:', error);
         setLoading(false);
       }
     }
 
-    fetchFamilyData();
+    fetchData();
   }, []);
 
-  // Build family tree when people data changes
-  useEffect(() => {
-    if (people && people.length > 0) {
-      const root = people.find((p) => p.parents && p.parents.length === 0);
-      if (root) {
-        const tree = buildFamilyTree(people, root.id);
-        setFamilyTree(tree);
-      } else {
-        setFamilyTree(null);
-      }
-    } else {
-      setFamilyTree(null);
-    }
-  }, [people]);
-
-  const value = {
-    people,
-    setPeople,
-    familyTree,
-    loading,
-    error,
-  };
-
   return (
-    <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>
+    <FamilyContext.Provider
+      value={{
+        people,
+        relationships,
+        loading,
+        rootPerson,
+        setPeople,
+        setRelationships,
+        setRootPerson,
+      }}
+    >
+      {children}
+    </FamilyContext.Provider>
   );
 }
 
-export const useFamily = () => {
+export function useFamily() {
   const context = useContext(FamilyContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useFamily must be used within a FamilyProvider');
   }
   return context;
-};
+}

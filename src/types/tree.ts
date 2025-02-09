@@ -1,30 +1,28 @@
-export interface BaseTreeNodeDatum {
-  name: string;
-  children?: TreeNodeDatum[];
-}
-
-export interface PersonNodeDatum extends BaseTreeNodeDatum {
-  gender: string;
+export interface NodeAttributes
+  extends Record<string, string | number | boolean> {
+  gender: 'Male' | 'Female' | '';
   age: number;
   status: 'alive' | 'deceased';
   id: number;
-  isSpouseConnector?: false;
-  attributes: {
-    phone: string;
-    address: string;
+  isSpouseConnector: boolean;
+  phone: string;
+  address: string;
+}
+
+export interface CustomTreeNodeDatum {
+  name: string;
+  attributes: NodeAttributes;
+  children?: CustomTreeNodeDatum[];
+  __rd3t: {
+    depth: number;
+    id: string;
+    collapsed: boolean;
   };
 }
 
-export interface ConnectorNodeDatum extends BaseTreeNodeDatum {
-  isSpouseConnector: true;
-  children: TreeNodeDatum[];
-}
-
-export type TreeNodeDatum = PersonNodeDatum | ConnectorNodeDatum;
-
 export interface CustomNodeProps {
-  nodeDatum: TreeNodeDatum;
-  onNodeClick: (node: TreeNodeDatum) => void;
+  nodeDatum: NodeAttributes;
+  onNodeClick: () => void;
 }
 
 export interface TreeDimensions {

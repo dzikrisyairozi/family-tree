@@ -2,14 +2,19 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import type { Person } from '@/types/family';
+import type { Person, Relationship } from '@/types/family';
 
 interface PersonDetailProps {
   person: Person;
   getPersonName: (id: number) => string;
+  relationships: Relationship[];
 }
 
-export function PersonDetail({ person, getPersonName }: PersonDetailProps) {
+export function PersonDetail({
+  person,
+  getPersonName,
+  relationships,
+}: PersonDetailProps) {
   if (!person) return null;
 
   return (

@@ -41,3 +41,13 @@ export interface FamilyMember extends Person {
     member: FamilyMember;
   }[];
 }
+
+export interface Relationship {
+  id: number;
+  from_person_id: number;
+  to_person_id: number;
+  relationship_type: 'spouse' | 'parent-child';
+  status: 'current' | 'deceased' | 'divorced' | 'biological' | 'adoptive';
+  created_at?: string;
+  updated_at?: string;
+}

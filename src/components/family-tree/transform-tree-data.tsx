@@ -1,67 +1,107 @@
-import type { FamilyMember, Person } from '@/types/family';
-import type {
-  ConnectorNodeDatum,
-  PersonNodeDatum,
-  TreeNodeDatum,
-} from '@/types/tree';
+import type { Person, Relationship } from '@/types/family';
+import type { CustomTreeNodeDatum, NodeAttributes } from '@/types/tree';
 
-function createPersonNode(person: Person): PersonNodeDatum {
-  return {
-    name: person.shortName,
+function createPersonNode(person: Person): CustomTreeNodeDatum {
+  const attributes: NodeAttributes = {
     gender: person.gender,
     age: person.age,
     status: person.status,
     id: person.id,
     isSpouseConnector: false,
-    attributes: {
-      phone: person.phone,
-      address: person.address,
+    phone: person.phone,
+    address: person.address,
+  };
+
+  return {
+    name: person.shortName,
+    attributes,
+    __rd3t: {
+      depth: 0,
+      id: person.id.toString(),
+      collapsed: false,
     },
   };
 }
 
 function createConnectorNode(
-  children: TreeNodeDatum[],
+  children: CustomTreeNodeDatum[],
   name = ''
-): ConnectorNodeDatum {
+): CustomTreeNodeDatum {
+  const attributes: NodeAttributes = {
+    gender: '',
+    age: 0,
+    status: 'alive',
+    id: 0,
+    isSpouseConnector: true,
+    phone: '',
+    address: '',
+  };
+
   return {
     name,
-    isSpouseConnector: true,
+    attributes,
     children,
+    __rd3t: {
+      depth: 0,
+      id: `connector-${Math.random()}`,
+      collapsed: false,
+    },
   };
 }
 
+function getSpouses(personId: number, relationships: Relationship[]): number[] {
+  return relationships
+    .filter(
+      (rel) =>
+        rel.relationship_type === 'spouse' &&
+        (rel.from_person_id === personId || rel.to_person_id === personId)
+    )
+    .map((rel) =>
+      rel.from_person_id === personId ? rel.to_person_id : rel.from_person_id
+    );
+}
+
+function getChildren(
+  personId: number,
+  relationships: Relationship[]
+): number[] {
+  return relationships
+    .filter(
+      (rel) =>
+        rel.relationship_type === 'parent-child' &&
+        rel.from_person_id === personId
+    )
+    .map((rel) => rel.to_person_id);
+}
+
 export function transformTreeData(
-  member: FamilyMember,
-  people: Person[]
-): PersonNodeDatum {
-  const spouses = member.spouses || [];
-  const children = member.children || [];
+  rootPerson: Person,
+  people: Person[],
+  relationships: Relationship[]
+): CustomTreeNodeDatum {
+  const mainNode = createPersonNode(rootPerson);
 
-  // Create main node data
-  const mainNode = createPersonNode(member);
-
-  // Create spouse nodes
-  const spouseNodes: PersonNodeDatum[] = spouses
-    .map((spouse): PersonNodeDatum | null => {
-      const spousePerson = people.find((p) => p.id === spouse.id);
-      if (!spousePerson) return null;
-      return createPersonNode(spousePerson);
+  // Get spouses
+  const spouseIds = getSpouses(rootPerson.id, relationships);
+  const spouseNodes: CustomTreeNodeDatum[] = spouseIds
+    .map((id) => {
+      const spouse = people.find((p) => p.id === id);
+      return spouse ? createPersonNode(spouse) : null;
     })
-    .filter((node): node is PersonNodeDatum => node !== null);
+    .filter((node): node is CustomTreeNodeDatum => node !== null);
 
-  // Create child nodes
-  const childNodes: PersonNodeDatum[] = children
-    .map((child): PersonNodeDatum | null => {
-      const childMember = child.member;
-      if (!childMember) return null;
-      return transformTreeData(childMember, people);
+  // Get children
+  const childIds = getChildren(rootPerson.id, relationships);
+  const childNodes: CustomTreeNodeDatum[] = childIds
+    .map((id) => {
+      const child = people.find((p) => p.id === id);
+      return child ? transformTreeData(child, people, relationships) : null;
     })
-    .filter((node): node is PersonNodeDatum => node !== null);
+    .filter((node): node is CustomTreeNodeDatum => node !== null);
 
-  // Handle spouse and child connections
+  // Handle connections
   if (spouseNodes.length > 0) {
-    const spouseConnections: TreeNodeDatum[] = spouseNodes.map((spouse) =>
+    const spouseConnections: CustomTreeNodeDatum[] = spouseNodes.map((spouse) =>
       createConnectorNode([spouse])
     );
 

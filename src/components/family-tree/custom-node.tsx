@@ -2,11 +2,16 @@
 
 import { motion } from 'framer-motion';
 import { User2 } from 'lucide-react';
+import type { MouseEvent } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import type { CustomNodeProps } from '@/types/tree';
 
 export function CustomNode({ nodeDatum, onNodeClick }: CustomNodeProps) {
+  if (!nodeDatum) {
+    return null;
+  }
+
   if (nodeDatum.isSpouseConnector) {
     return (
       <g>
@@ -15,8 +20,13 @@ export function CustomNode({ nodeDatum, onNodeClick }: CustomNodeProps) {
     );
   }
 
+  const handleClick = (event: MouseEvent<SVGGElement>) => {
+    event.stopPropagation();
+    onNodeClick();
+  };
+
   return (
-    <g onClick={() => onNodeClick(nodeDatum)}>
+    <g onClick={handleClick}>
       <foreignObject
         x="-100"
         y="-60"

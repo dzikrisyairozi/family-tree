@@ -6,21 +6,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { Person } from '@/types/family';
+import type { Person, Relationship } from '@/types/family';
 
 import { PersonDetail } from '../admin/person-detail';
 
 interface PersonDetailsDialogProps {
   selectedPerson: Person | null;
   onClose: () => void;
-  getPersonName: (id: number) => string;
+  relationships: Relationship[];
+  people: Person[];
 }
 
 export function PersonDetailsDialog({
   selectedPerson,
   onClose,
-  getPersonName,
+  relationships,
+  people,
 }: PersonDetailsDialogProps) {
+  const getPersonName = (id: number) => {
+    const person = people.find((p) => p.id === id);
+    return person ? person.fullName : 'Unknown';
+  };
+
   return (
     <Dialog open={!!selectedPerson} onOpenChange={onClose}>
       <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[500px]">
@@ -28,7 +35,11 @@ export function PersonDetailsDialog({
           <DialogTitle>Person Details</DialogTitle>
         </DialogHeader>
         {selectedPerson && (
-          <PersonDetail person={selectedPerson} getPersonName={getPersonName} />
+          <PersonDetail
+            person={selectedPerson}
+            getPersonName={getPersonName}
+            relationships={relationships}
+          />
         )}
       </DialogContent>
     </Dialog>
