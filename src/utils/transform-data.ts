@@ -7,19 +7,13 @@ export async function transformFamilyData() {
 
   if (personsError) throw personsError;
 
-  const { data: parentChildRels, error: parentChildError } = await supabase
-    .from('parent_child_relationships')
+  const { data: relationships, error: relationshipsError } = await supabase
+    .from('relationships')
     .select('*');
 
-  const { data: spouseRels, error: spouseError } = await supabase
-    .from('spouse_relationships')
-    .select('*');
-
-  if (parentChildError) throw parentChildError;
-  if (spouseError) throw spouseError;
+  if (relationshipsError) throw relationshipsError;
 
   return persons.map((person) => ({
-    ...person,
     id: person.id,
     shortName: person.short_name,
     fullName: person.full_name,
@@ -28,25 +22,38 @@ export async function transformFamilyData() {
     status: person.status,
     phone: person.phone,
     address: person.address,
-    parents: parentChildRels
-      .filter((rel) => rel.child_id === person.id)
-      .map((rel) => ({
-        id: rel.parent_id,
-        type: rel.relationship_type,
-      })),
-    children: parentChildRels
-      .filter((rel) => rel.parent_id === person.id)
-      .map((rel) => ({
-        id: rel.child_id,
-        type: rel.relationship_type,
-      })),
-    spouses: spouseRels
+    parents: relationships
       .filter(
-        (rel) => rel.person1_id === person.id || rel.person2_id === person.id
+        (rel) =>
+          rel.relationship_type === 'parent-child' &&
+          rel.to_person_id === person.id
       )
       .map((rel) => ({
-        id: rel.person1_id === person.id ? rel.person2_id : rel.person1_id,
-        status: rel.status,
+        id: rel.from_person_id,
+        type: rel.status as 'biological' | 'adoptive',
+      })),
+    children: relationships
+      .filter(
+        (rel) =>
+          rel.relationship_type === 'parent-child' &&
+          rel.from_person_id === person.id
+      )
+      .map((rel) => ({
+        id: rel.to_person_id,
+        type: rel.status as 'biological' | 'adoptive',
+      })),
+    spouses: relationships
+      .filter(
+        (rel) =>
+          rel.relationship_type === 'spouse' &&
+          (rel.from_person_id === person.id || rel.to_person_id === person.id)
+      )
+      .map((rel) => ({
+        id:
+          rel.from_person_id === person.id
+            ? rel.to_person_id
+            : rel.from_person_id,
+        status: rel.status as 'current' | 'deceased' | 'divorced',
       })),
   }));
 }

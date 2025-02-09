@@ -13,6 +13,7 @@ interface PersonDetailProps {
 export function PersonDetail({
   person,
   getPersonName,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   relationships,
 }: PersonDetailProps) {
   if (!person) return null;

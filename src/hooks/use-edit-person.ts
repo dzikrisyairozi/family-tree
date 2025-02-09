@@ -41,78 +41,67 @@ export function useEditPerson({ onSuccess, setPeople }: UseEditPersonProps) {
 
       if (updateError) throw updateError;
 
-      // Delete existing relationships
-      const { error: deleteParentsError } = await supabase
-        .from('parent_child_relationships')
+      // Delete all existing relationships for this person
+      const { error: deleteRelationshipsError } = await supabase
+        .from('relationships')
         .delete()
-        .eq('child_id', personId);
+        .or(`from_person_id.eq.${personId},to_person_id.eq.${personId}`);
 
-      const { error: deleteChildrenError } = await supabase
-        .from('parent_child_relationships')
-        .delete()
-        .eq('parent_id', personId);
+      if (deleteRelationshipsError) throw deleteRelationshipsError;
 
-      const { error: deleteSpousesError } = await supabase
-        .from('spouse_relationships')
-        .delete()
-        .or(`person1_id.eq.${personId},person2_id.eq.${personId}`);
+      // Create new relationships array for batch insert
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const relationships: any[] = [];
 
-      if (deleteParentsError) throw deleteParentsError;
-      if (deleteChildrenError) throw deleteChildrenError;
-      if (deleteSpousesError) throw deleteSpousesError;
-
-      // Insert new parent relationships
-      if (formData.parents && formData.parents.length > 0) {
-        const validParents = formData.parents.filter((parent) => parent.id);
-        if (validParents.length > 0) {
-          const { error: parentsError } = await supabase
-            .from('parent_child_relationships')
-            .insert(
-              validParents.map((parent) => ({
-                parent_id: parseInt(parent.id),
-                child_id: personId,
-                relationship_type: parent.type,
-              }))
-            );
-
-          if (parentsError) throw parentsError;
-        }
+      // Add parent relationships
+      if (formData.parents?.length) {
+        formData.parents.forEach((parent) => {
+          if (parent.id) {
+            relationships.push({
+              from_person_id: parseInt(parent.id),
+              to_person_id: personId,
+              relationship_type: 'parent-child',
+              status: parent.type,
+            });
+          }
+        });
       }
 
-      // Insert new spouse relationships
-      if (formData.spouses && formData.spouses.length > 0) {
-        const validSpouses = formData.spouses.filter((spouse) => spouse.id);
-        if (validSpouses.length > 0) {
-          const { error: spousesError } = await supabase
-            .from('spouse_relationships')
-            .insert(
-              validSpouses.map((spouse) => ({
-                person1_id: personId,
-                person2_id: parseInt(spouse.id),
-                status: spouse.status,
-              }))
-            );
-
-          if (spousesError) throw spousesError;
-        }
+      // Add spouse relationships
+      if (formData.spouses?.length) {
+        formData.spouses.forEach((spouse) => {
+          if (spouse.id) {
+            relationships.push({
+              from_person_id: personId,
+              to_person_id: parseInt(spouse.id),
+              relationship_type: 'spouse',
+              status: spouse.status,
+            });
+          }
+        });
       }
 
-      // Insert new children relationships
-      if (formData.children && formData.children.length > 0) {
-        const validChildren = formData.children.filter((child) => child.id);
-        if (validChildren.length > 0) {
-          const { error: childrenError } = await supabase
-            .from('parent_child_relationships')
-            .insert(
-              validChildren.map((child) => ({
-                parent_id: personId,
-                child_id: parseInt(child.id),
-                relationship_type: child.type,
-              }))
-            );
+      // Add children relationships
+      if (formData.children?.length) {
+        formData.children.forEach((child) => {
+          if (child.id) {
+            relationships.push({
+              from_person_id: personId,
+              to_person_id: parseInt(child.id),
+              relationship_type: 'parent-child',
+              status: child.type,
+            });
+          }
+        });
+      }
 
-          if (childrenError) throw childrenError;
-        }
+      // Insert all new relationships in a single batch
+      if (relationships.length > 0) {
+        const { error: relationshipsError } = await supabase
+          .from('relationships')
+          .insert(relationships);
+
+        if (relationshipsError) throw relationshipsError;
       }
 
       // Refresh people list with transformed data
